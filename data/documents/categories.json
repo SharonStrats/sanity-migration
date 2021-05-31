@@ -1,0 +1,9 @@
+
+[
+    {
+    "_type": "category",
+    "_id": "categoryid",
+    "title": "Test Category",
+    "description": "I am a test"
+  }
+]

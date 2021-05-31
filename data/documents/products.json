@@ -1,0 +1,33 @@
+[
+  {
+  "_type": "product",
+  "_id": "productid2",
+  "title": "Test Product",
+  "description": "I am a test",
+  "slug": {
+    "current": "test-product"
+  },
+  "categories": [ { "_key": "category", "_ref": "categoryid"} ]
+},
+{
+  "_type": "product",
+  "_id": "product55",
+  "title": "Test Product",
+  "description": "I am a test",
+  "slug": {
+    "current": "product-55"
+  },
+  "categories": [ { "_key": "category", "_ref": "categoryid"} ]
+},
+{
+  "_type": "product",
+  "_id": "product65",
+  "title": "Yarn",
+  "description": "I am a test",
+  "slug": {
+    "current": "product-65"
+  },
+  "categories": [ { "_key": "category", "_ref": "categoryid"} ]
+}
+]
+
