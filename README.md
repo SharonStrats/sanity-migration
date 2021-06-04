@@ -33,10 +33,13 @@ Unfortunately at this point in time once you load all your documents and assets 
 
 ## Delete documents from a schema type
 
-You can delete all documents from a particular schema by modifying delete.ts to include the document types you want to delete. Run tsc and then run node dist/delete.js
+You need to specify a Document Type to delete.
 
-    tsc
-    yarn deletedocuments
+    yarn start
+
+Select delete, then documents, then enter the Document Type for the documents you want to delete.
+
+### Detailed Implementation Information
 
 Below is the code that will delete, the [0...999] is simply how many documents to delete. If you don't have this nothing gets deleted.
 

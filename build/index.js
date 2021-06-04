@@ -40,49 +40,87 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 require("dotenv/config");
-var config_1 = require("./config");
-var client_1 = __importDefault(require("@sanity/client"));
-var fs_1 = require("fs");
-var data;
-var rawData;
-var path;
-var migrateData = function () {
-    var sanityClientConfig = {
-        projectId: process.env.SANITY_PROJECT || '6h71nmg1',
-        dataset: process.env.SANITY_DATASET,
-        token: process.env.SANITY_TOKEN,
-        apiVersion: '2021-03-25',
-        useCdn: false
-    };
-    var client = new client_1.default(sanityClientConfig);
-    try {
-        fs_1.readdirSync(config_1.DOCUMENTS_DIR).forEach(function (file) { return __awaiter(void 0, void 0, void 0, function () {
-            var transaction;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        transaction = client.transaction();
-                        path = config_1.DOCUMENTS_DIR + file;
-                        rawData = fs_1.readFileSync(path);
-                        data = JSON.parse(rawData.toString());
-                        data.forEach(function (document) { return __awaiter(void 0, void 0, void 0, function () {
-                            return __generator(this, function (_a) {
-                                transaction.createOrReplace(document);
-                                return [2 /*return*/];
-                            });
-                        }); });
-                        return [4 /*yield*/, transaction.commit()];
-                    case 1:
-                        _a.sent();
-                        return [2 /*return*/];
-                }
-            });
-        }); });
+var prompts_1 = __importDefault(require("prompts"));
+var Migrator_1 = require("./Migrator");
+var interval;
+// TODO: can expand to allow processing of a single file
+var questions = [
+    {
+        type: 'text',
+        name: 'action',
+        message: 'Please enter load or delete DELETE ONLY FOR DOCUMENTS',
+        validate: function (value) {
+            return /^load|delete/.test(value) ? true : 'Only enter load or delete';
+        }
+    },
+    {
+        type: 'text',
+        name: 'type',
+        message: 'Please enter documents or images DELETE ONLY FOR DOCUMENTS',
+        validate: function (value) {
+            return /^documents|images/.test(value)
+                ? true
+                : 'Only enter documents or images IMAGES LOAD ONLY';
+        }
+    },
+    {
+        type: 'text',
+        name: 'object',
+        message: 'Enter Document Type to Delete if Delete was selected, otherwise hit ENTER'
     }
-    catch (e) {
-        console.log(e);
-    }
-    finally {
-    }
+];
+var cleanup = function () {
+    clearInterval(interval);
 };
-migrateData();
+var sanityClientConfig = {
+    projectId: process.env.SANITY_PROJECT || '6h71nmg1',
+    dataset: process.env.SANITY_DATASET,
+    token: process.env.SANITY_TOKEN,
+    apiVersion: '2021-03-25',
+    useCdn: false
+};
+var migrateData = function () { return __awaiter(void 0, void 0, void 0, function () {
+    var _a, action, type, object, migrator;
+    return __generator(this, function (_b) {
+        switch (_b.label) {
+            case 0: return [4 /*yield*/, prompts_1.default(questions, {
+                    onCancel: cleanup,
+                    onSubmit: cleanup
+                })];
+            case 1:
+                _a = _b.sent(), action = _a.action, type = _a.type, object = _a.object;
+                if (action === 'delete' && type === 'images')
+                    throw new Error('Images can not be deleted now.');
+                if (action === 'delete' && !object)
+                    throw new Error('Document type is required for delete');
+                migrator = new Migrator_1.Migrator(sanityClientConfig);
+                // TODO: can use object as a filename to process one file only later
+                if (action === 'load' && type === 'documents')
+                    migrator.loadDocuments(object);
+                if (action === 'load' && type === 'images')
+                    migrator.loadImages(object);
+                if (action === 'delete' && type === 'documents')
+                    migrator.deleteDocuments(object);
+                return [2 /*return*/];
+        }
+    });
+}); };
+var run = function () { return __awaiter(void 0, void 0, void 0, function () {
+    var e_1;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0:
+                _a.trys.push([0, 2, , 3]);
+                return [4 /*yield*/, migrateData()];
+            case 1:
+                _a.sent();
+                return [3 /*break*/, 3];
+            case 2:
+                e_1 = _a.sent();
+                console.log(e_1);
+                return [3 /*break*/, 3];
+            case 3: return [2 /*return*/];
+        }
+    });
+}); };
+run();
