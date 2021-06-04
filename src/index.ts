@@ -1,12 +1,38 @@
 import 'dotenv/config'
-import sanityClient, { IdentifiedSanityDocumentStub, ProjectClientConfig } from '@sanity/client'
-import { readdirSync, readFileSync } from 'fs'
-let data: IdentifiedSanityDocumentStub<any>[] 
-let rawData
-let path
+import { ProjectClientConfig } from '@sanity/client'
+import prompts, { PromptObject } from 'prompts'
+import { Migrator } from './Migrator'
 
-const DIRECTORY = {
-  DOCUMENTS: './data/documents/'
+let interval: NodeJS.Timeout
+
+// TODO: can expand to allow processing of a single file
+
+const questions: PromptObject<string>[] = [
+  {
+    type: 'text',
+    name: 'action',
+    message: 'Please enter load or delete DELETE ONLY FOR DOCUMENTS',
+    validate: (value: string) =>
+      /^load|delete/.test(value) ? true : 'Only enter load or delete'
+  },
+  {
+    type: 'text',
+    name: 'type',
+    message: 'Please enter documents or images DELETE ONLY FOR DOCUMENTS',
+    validate: (value: string) =>
+      /^documents|images/.test(value)
+        ? true
+        : 'Only enter documents or images IMAGES LOAD ONLY'
+  },
+  {
+    type: 'text',
+    name: 'object',
+    message:
+      'Enter Document Type to Delete if Delete was selected, otherwise hit ENTER'
+  }
+]
+const cleanup = () => {
+  clearInterval(interval)
 }
 
 const sanityClientConfig: ProjectClientConfig = {
@@ -16,28 +42,32 @@ const sanityClientConfig: ProjectClientConfig = {
   apiVersion: '2021-03-25',
   useCdn: false
 }
-const client = new sanityClient(sanityClientConfig)
 
-const loadData = async () => {
-  try {
-  readdirSync(DIRECTORY.DOCUMENTS).forEach(async (file) => {
-    const transaction = client.transaction()
-    path = DIRECTORY.DOCUMENTS  + file
-  
-    rawData = readFileSync(path)
-    data = JSON.parse(rawData.toString('utf8'))
-    data.forEach(async (document: IdentifiedSanityDocumentStub<any>) =>
-    { transaction.createOrReplace(document)
-    }) 
-    await transaction.commit()
+const migrateData = async () => {
+  const { action, type, object } = await prompts(questions, {
+    onCancel: cleanup,
+    onSubmit: cleanup
   })
-  } catch(e) {
-    console.log(e)
-  } finally {
 
-  }
+  if (action === 'delete' && type === 'images')
+    throw new Error('Images can not be deleted now.')
+  if (action === 'delete' && !object)
+    throw new Error('Document type is required for delete')
+  const migrator: Migrator = new Migrator(sanityClientConfig)
 
+  // TODO: can use object as a filename to process one file only later
+  if (action === 'load' && type === 'documents') migrator.loadDocuments(object)
+  if (action === 'load' && type === 'images') migrator.loadImages(object)
+  if (action === 'delete' && type === 'documents')
+    migrator.deleteDocuments(object)
 }
-loadData()
 
+const run = async () => {
+  try {
+    await migrateData()
+  } catch (e) {
+    console.log(e)
+  }
+}
 
+run()

@@ -1,0 +1,12 @@
+[
+  {
+    "documentID": "product55",
+    "imageAttribute": "prodimage",
+    "imageFilename": "kids.jpeg"
+  },
+  {
+    "documentID": "productid2",
+    "imageAttribute": "prodimage",
+    "imageFilename": "testing.jpeg"
+  }
+]

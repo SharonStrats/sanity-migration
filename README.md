@@ -11,6 +11,7 @@ Before you go any further see the .env.example file. Create a .env file of your 
 Note: You can view examples in the directories listed below to get a better idea of what your files should look like.
 
 1. Create one json file for each document type (schema you created in studio). Place these files in the data/document directory. (Note: This is a recommendation for organisation, the program will load every file regardless of the file they are in.)
+   **Important** file sizes need to be kept at 4MB or less. This is do to the API Limit shown here https://www.sanity.io/docs/technical-limits.
 
 2. Images should be placed in the data/images directory.
 
@@ -18,13 +19,13 @@ Note: You can view examples in the directories listed below to get a better idea
 
 ### Process Files
 
-First load the documents
+To run migration
 
-    yarn loaddocuments
+    yarn start
 
-Then load the images
+This will take you through a series of prompts.
 
-    yarn loadimages
+Note: At this time you can NOT delete images. We can add this in the future.
 
 ## Publishing Documents
 
@@ -123,9 +124,8 @@ Use replace command below if you get duplicate id errors.
     url: 'https://cdn.sanity.io/images/6h71nmg1/development/038d4d117f0b84d5b6449ddcb5bbcfeeee15dcf6-768x1024.jpg'
     }
 
-## My own notes
+### API Mutation rate limit
 
-Need to add p-queue for rate limit
-See...
+This is designed to load 4MB or less files, one transaction per file. Each file will need to be read, processed, then sent. There doesn't appear to be a need to worry about the Maximum mutation rate limit of 25req/s. However if this becomes a problem p-queue can be used. It is pretty straight forward to implement. See links before for more information.
 https://www.npmjs.com/package/p-queue
-and https://www.sanity.io/docs/importing-data#import-using-a-client-library
+https://www.sanity.io/docs/importing-data#import-using-a-client-library
